@@ -1,0 +1,249 @@
+---
+title: "STA 108 Project II"
+author:
+- Junyao Lu, Fengshuo Song
+- STA108 SectionB
+- Instructor:JoAnna Whitener
+date: "11/20/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+\clearpage
+
+```{r, echo=FALSE}
+library(ggplot2)
+```
+
+# Part I:
+
+The data is used from the file salary1.csv.
+
+```{r, echo=FALSE}
+salary1.data = read.csv("C:/Users/songf/Documents/FQ2019/STA 108/project/salary1.csv")
+```
+
+The summary of data is shown as follows:
+```{r, echo=FALSE}
+summary(salary1.data)
+```
+
+
+## (a)
+```{r, echo=FALSE}
+lm.fit = lm(sl~., data=salary1.data)
+summary(lm.fit)
+```
+
+Our estimated linear regression model is $\hat{Y}$=17422.01+483.99X1-4113.89X2, where
+
+Y represents the estimated three month salary in dollars,
+
+X1 represents the number of years since the subject earned their highest degree,
+
+X2 represents the highest degree (0 for doctorate and 1 for masters).
+
+
+
+## (b) Interpret b1 and b2
+b1: When the number of years after earning the highest degree increases by 1 year, the average increase in the 3-month salary is 483.99 dollars, holding the highest degree earned constant.
+
+b2:The subject whose highest degree is masters has less 3-month salary than the subject whose highest degree is doctorate by 4113.89 dollars, on average, holding the number of years after earning highest degree constant.
+
+
+
+## (c)
+```{r, echo=FALSE}
+predict(lm.fit, data.frame(yd = 10, dg = 'doctorate'))
+```
+
+The predicted 3-month salary of a subject who has 10 years of experience and has earned their doctorate is 22261.91 dollars.
+
+
+
+## (d)
+```{r, echo=FALSE}
+confint(lm.fit, "yd")
+```
+
+We are 95% confident that when the number of years after earning the highest degree increases by 1 year, the average increase in the 3-month salary is between 355.42 dollars and 612.56 dollars, holding the highest degree earned constant.
+
+
+
+## (e)
+```{r, echo=FALSE}
+confint(lm.fit, level = (1 - 0.05/3))
+```
+
+Interpretation for $\beta$ 1:
+
+We are overall 95% confident that when the number of years after earning the highest degree increases by 1 year, the average increase in the 3-month salary is between 325.3897 dollars and 642.5906 dollars, holding the highest degree earned constant.
+
+
+Interpretation for $\beta$ 2:
+
+We are overall 95% confident that the subject whose highest degree is masters has less 3-month salary than the subject whose highest degree is doctorate by between 738.9551 dollars and 7488.8303 dollars, on average, holding the number of years after earning highest degree constant.
+
+
+
+## (f)
+```{r, echo=FALSE}
+p = 3
+g = 2
+n = dim(salary1.data)[1]
+X = model.matrix(lm.fit)
+middle.part=solve(t(X)%*%X)
+X.new = cbind(1, c(5,10), c(1,0))
+sigma.hat = summary(lm.fit)$sigma
+width.half = sqrt(g*qf(0.90, g, n-p)*(1+apply(X.new, 1, function(x){t(x)%*%middle.part%*%x})))*sigma.hat
+Schef.pred = matrix(rep(predict(lm.fit, data.frame(yd=c(5,10), dg=c('masters','doctorate'))), 2), ncol = 2)
+Schef.pred[, 1] = Schef.pred[, 1] - width.half
+Schef.pred[, 2] = Schef.pred[, 2] + width.half
+colnames(Schef.pred) = c('lwr', 'upr')
+print(Schef.pred)
+```
+
+We are overall 90% confident that the exact 3-month salary of a subject who has 5 years of experience and whose highest degree is masters is between 6159.97 dollars and 25296.15 dollars, and the exact 3-month salary of a subject who has 10 years of experience and whose highest degree is doctorate is between 13136.10 dollars and 31387.71 dollars.
+
+
+
+
+
+# Part II:
+
+The data is used from the file salary2.csv.
+
+```{r, echo=FALSE}
+salary2.data = read.csv("C:/Users/songf/Documents/FQ2019/STA 108/project/salary2.csv")
+```
+
+The summary of data is shown as follows:
+```{r, echo=FALSE}
+summary(salary2.data)
+```
+
+
+
+## (a)
+Our full regression model for salary is shown as follows:
+```{r, echo=FALSE}
+full.model = lm(sl~., data=salary2.data)
+full.model$coefficients
+```
+
+$\hat{Y}$ = 16454.07 + 107.73X1 - 39.04X2 + 1153.77X3 + 3718.84X41 + 9819.22X42, where
+
+Y represents the estimated three month salary in dollars,
+
+X1 represents the number of years since the subject earned their highest degree,
+
+X2 represents the highest degree (0 for doctorate and 1 for masters),
+
+X3 represents the gender (0 for female and 1 for male),
+
+X4 represents the rank (X41=0 X42=0 for assistant, X41=1 X42=0 for associate and X41=0 X42=1 for full).
+
+
+The reduced model is shown as follows:
+```{r, echo=FALSE}
+reduced.model1 = lm(sl~yd+dg+sx, data=salary2.data)
+reduced.model1$coefficients
+```
+
+$\hat{Y}$ = 15594.9 + 476.0X1 - 4228.4X2 + 2730.2X3
+
+
+```{r, echo=FALSE}
+anova(full.model, reduced.model1)
+```
+
+With the information above, we can then do a hypothesis test to see if X4(rank) can be dropped or not.
+
+i) H0: $\beta$ 4 = $\beta$ 5 = 0; Ha: at least one of the $\beta$ 4 or $\beta$ 5 $\not =$ 0.
+
+ii) Fs = 19.395
+
+iii) p-value = 7.791e-07
+
+iv) As $\alpha$ = 0.01, p-value < $\alpha$. So, we reject H0. We conclude that we cannot drop X4(rank) from the model.
+
+
+
+## (b)
+
+The reduced model is shown as follows:
+```{r, echo=FALSE}
+reduced.model2 = lm(sl~yd+rk, data=salary2.data)
+reduced.model2$coefficients
+```
+
+$\hat{Y}$ = 17166.46499 + 95.08447X1 + 4209.65030X41 + 10310.29631X42
+
+
+```{r, echo=FALSE}
+anova(full.model, reduced.model2)
+```
+
+With the information above, we can then do a hypothesis test to see if X2(highest degree) and X3(gender) can be dropped or not.
+
+i) H0: $\beta$ 2 = $\beta$ 3 = 0; Ha: at least one of the $\beta$ 2 or $\beta$ 3 $\not =$ 0.
+
+ii) Fs = 0.6869
+
+iii) p-value = 0.5082
+
+iv) As $\alpha$ = 0.01, p-value > $\alpha$. So, we fail to reject H0. We conclude that we can drop X2(highest degree) and X3(gender) from the model.
+
+
+## (c)
+
+Based on our observations from (a) and (b), our "best" model is Y ~ X1 + X4.
+A summary of the best model is shown as follows:
+
+```{r, echo=FALSE}
+best.model = lm(sl~yd+rk, data=salary2.data)
+best.model$coefficients
+```
+
+So, the estimated linear equation is:
+
+$\hat{Y}$ = 17166.46 + 95.08X1 + 4209.65X41 + 110310.30X42
+
+
+
+## (d)
+```{r, echo=FALSE}
+orig.model = lm(sl~yd, data=salary2.data)
+SSE.before=sum(orig.model$residuals^2)
+SSE.after=sum(best.model$residuals^2)
+partialR2=(SSE.before-SSE.after)/SSE.before
+print(partialR2)
+```
+57.24% of the error for a model including only X1(number of years since the subject earned their highest degree) is reduced when we add X4(rank).
+
+
+
+## (e)
+```{r, echo=FALSE}
+full.model = lm(sl~yd+dg+sx+rk, data=salary2.data)
+SSE.before=sum(best.model$residuals^2)
+SSE.after=sum(full.model$residuals^2)
+partialR2=(SSE.before-SSE.after)/SSE.before
+print(partialR2)
+```
+2.90% of the error for a model including only X1(number of years since the subject earned their highest degree),X4(rank) is reduced when we add X2(highest degree),X3(gender).
+
+
+
+
+### (f)
+
+We can conclude from (d) and (e) that the effect of adding X2(highest degree) and X3(gender) to the given model is 2.90%, which is very small compared to the effect of adding X4(rank). Therefore, it is not necessary to include X2(highest degree) and X3(gender) in our model. So, the above values agree with our "best model" from part (c).
+
+\clearpage
+
+# Appendix Code
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
